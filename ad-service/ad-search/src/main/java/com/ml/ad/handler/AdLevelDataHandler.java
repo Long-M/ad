@@ -1,10 +1,7 @@
 package com.ml.ad.handler;
 
 import com.alibaba.fastjson.JSON;
-import com.ml.ad.dump.table.AdCreativeTable;
-import com.ml.ad.dump.table.AdCreativeUnitTable;
-import com.ml.ad.dump.table.AdPlanTable;
-import com.ml.ad.dump.table.AdUnitTable;
+import com.ml.ad.dump.table.*;
 import com.ml.ad.index.DataTable;
 import com.ml.ad.index.IndexAware;
 import com.ml.ad.index.adplan.AdPlanIndex;
@@ -15,9 +12,16 @@ import com.ml.ad.index.creative.CreativeIndex;
 import com.ml.ad.index.creative.CreativeObject;
 import com.ml.ad.index.creativeunit.CreativeUnitIndex;
 import com.ml.ad.index.creativeunit.CreativeUnitObject;
+import com.ml.ad.index.district.UnitDistrictIndex;
+import com.ml.ad.index.interest.UnitItIndex;
+import com.ml.ad.index.keyword.UnitKeywordIndex;
 import com.ml.ad.mysql.constant.OpType;
 import com.ml.ad.util.CommonUtils;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 索引之间存在层级的划分，也就是依赖关系的划分
@@ -117,6 +121,88 @@ public class AdLevelDataHandler {
                 DataTable.of(CreativeUnitIndex.class),
                 CommonUtils.stringConcat(creativeUnitObject.getAdId().toString(), creativeUnitObject.getUnitId().toString()),
                 creativeUnitObject,
+                type
+        );
+    }
+
+    /**
+     * 广告单元区域筛选
+     *
+     * @param unitDistrictTable 区域
+     * @param type              操作类型
+     */
+    public static void handleLevel4(AdUnitDistrictTable unitDistrictTable, OpType type) {
+        if (type == OpType.UPDATE) {
+            log.error("district index can not support update");
+            return;
+        }
+
+        AdUnitObject unitObject = DataTable.of(AdUnitIndex.class).get(unitDistrictTable.getUnitId());
+        if (null == unitObject) {
+            log.error("AdUnitDistrictTable index error: {}", unitDistrictTable.getUnitId());
+            return;
+        }
+
+        String key = CommonUtils.stringConcat(unitDistrictTable.getProvince(), unitDistrictTable.getProvince());
+        Set<Long> value = new HashSet<>(Collections.singleton(unitDistrictTable.getUnitId()));
+        handleBinlogEvent(
+                DataTable.of(UnitDistrictIndex.class),
+                key,
+                value,
+                type
+        );
+    }
+
+    /**
+     * 广告单元标签筛选
+     *
+     * @param unitItTable 标签
+     * @param type        操作类型
+     */
+    public static void handleLevel4(AdUnitItTable unitItTable, OpType type) {
+        if (type == OpType.UPDATE) {
+            log.error("it index can not support update");
+            return;
+        }
+
+        AdUnitObject unitObject = DataTable.of(AdUnitIndex.class).get(unitItTable.getUnitId());
+        if (unitObject == null) {
+            log.error("AdUnitItTable index error: {}", unitItTable.getUnitId());
+            return;
+        }
+
+        Set<Long> value = new HashSet<>(Collections.singleton(unitItTable.getUnitId()));
+        handleBinlogEvent(
+                DataTable.of(UnitItIndex.class),
+                unitItTable.getItTag(),
+                value,
+                type
+        );
+    }
+
+    /**
+     * 广告单元关键词筛选
+     *
+     * @param keywordTable 关键词
+     * @param type         操作类型
+     */
+    public static void handleLevel4(AdUnitKeywordTable keywordTable, OpType type) {
+        if (type == OpType.UPDATE) {
+            log.error("keyword index can not support update");
+            return;
+        }
+
+        AdUnitObject unitObject = DataTable.of(AdUnitIndex.class).get(keywordTable.getUnitId());
+        if (unitObject == null) {
+            log.error("AdUnitKeywordTable index error: {}", keywordTable.getUnitId());
+            return;
+        }
+
+        Set<Long> value = new HashSet<>(Collections.singleton(keywordTable.getUnitId()));
+        handleBinlogEvent(
+                DataTable.of(UnitKeywordIndex.class),
+                keywordTable.getKeyword(),
+                value,
                 type
         );
     }
