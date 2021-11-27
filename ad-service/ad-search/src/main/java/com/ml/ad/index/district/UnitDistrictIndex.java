@@ -1,14 +1,18 @@
 package com.ml.ad.index.district;
 
 import com.ml.ad.index.IndexAware;
+import com.ml.ad.search.vo.feature.DistrictFeature;
 import com.ml.ad.util.CommonUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.stream.Collectors;
 
 /**
  * @author Mr.ml
@@ -66,12 +70,22 @@ public class UnitDistrictIndex implements IndexAware<String, Set<Long>> {
         unitIds.removeAll(value);
 
         for (Long unitId : value) {
-
             Set<String> districts = CommonUtils.getOrCreate(unitId, unitDistrictMap, ConcurrentSkipListSet::new);
             districts.remove(key);
         }
 
         log.info("UnitDistrictIndex, after delete: {}", unitDistrictMap);
+    }
+
+    public boolean match(Long adUnitId, List<DistrictFeature.ProvinceAndCity> districts) {
+        if (unitDistrictMap.containsKey(adUnitId)
+                && CollectionUtils.isNotEmpty(unitDistrictMap.get(adUnitId))) {
+            Set<String> unitDistricts = unitDistrictMap.get(adUnitId);
+
+            List<String> targetDistricts = districts.stream().map(d -> CommonUtils.stringConcat(d.getProvince(), d.getCity())).collect(Collectors.toList());
+            return CollectionUtils.isSubCollection(targetDistricts, unitDistricts);
+        }
+        return false;
     }
 
 }
