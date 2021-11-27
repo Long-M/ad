@@ -33,14 +33,14 @@ public class SearchResponse {
         private Integer materialType;
 
         /**
-         * 展示监测 url
+         * 展示监测url
          */
-        private List<String> showMonitorUrl = Arrays.asList("www.imooc.com", "www.imooc.com");
+        private List<String> showMonitorUrl = Arrays.asList("www.maolong.com", "www.maolong.com");
 
         /**
-         * 点击监测 url
+         * 点击监测url
          */
-        private List<String> clickMonitorUrl = Arrays.asList("www.imooc.com", "www.imooc.com");
+        private List<String> clickMonitorUrl = Arrays.asList("www.maolong.com", "www.maolong.com");
     }
 
     public static Creative convert(CreativeObject object) {
